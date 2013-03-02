@@ -7,3 +7,5 @@ sc -l	# get # lines
 cat samp.csv | awk -F "," '{print $17}'| grep 'LAX\|OAK\|SMF' | wc -l	# only gives total - need split by airport.
 
 cat 1987.csv | awk -F "," '{print $17}'| grep 'LAX\|OAK\|SMF' | sort | uniq -c #DONE
+
+time bzip2 -dc 1987.csv.bz2 | awk -F "," '{print $17}'| grep 'LAX\|OAK\|SMF' | sort | uniq -c	# to time it.
