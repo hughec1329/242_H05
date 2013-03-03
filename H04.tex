@@ -1,0 +1,57 @@
+\documentclass[12pt]{article}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{hyperref}
+\title{STA242 - HW04 - Working with Large files}
+\author{Hugh Crockford}
+\date{\today}
+\begin{document}
+	\maketitle
+	\section{Using Shell tools}
+		Using a combination of grep and uniq -c, I was able to get counts of flights leaving our 4 airports by scanning files by line, with no intermediate files. 
+		I tried piping output of bzip -dc (-dc outputs directly to stdout) directly into my grep/uniq command, and this worked well for the individual sipped files, however when I tried this on the combined decade long files it tripped up during the uncompression and threw an error. I was able to run the exact same command with no issues on the uncompressed files, So I'm assuming the error had something to do with the bzip uncompression, maybe in between the multiple files?
+		
+
+		To get the average and standard deviation, I had to put code into a shell script and pass it arguments from R.
+		I used awk for string processing, which was fast and is fairly easy to write.
+		The awk statement was reasonably easy to work out once the nececary fields were identified, however I struggled when trying to generalise my statement, as the nested quotes ( double, single , and back) were  been evaluated before passed down to the shell.
+		I tried various methods (sprintf, paste, escaping quotes) in R but was unable to achieve a general result and ended up hardcoding into my script which is hence not generalisable.
+		Using a case statement I was able to use one script to compute all variables recquired - counts, mean, and SD.
+
+	\section{Using R}
+		\subsection{Using file connections}
+			
+
+		\subsection{Using Databases}
+
+	\section{Moving cars.}
+		Moving cars was achieved by selecting all color based on time, then incrementing their x or y positions respectively. Any cars exceeding the dimensions of map in either dimension was placed back at beginning. 
+
+
+		I didn't include dimensions with map object as in H02, but perhaps this could be achieved using a similar list function, and remove the need to include map dimensions in call to move function.
+		The move function worked well for smaller maps where I could visually check the results, however because I couldn't get it to function within a loop I was unable to assess it on larger maps.
+
+	\section{Checking Jams.}
+		Using Python I struggled with the referencing of car locations that would allow me to check jams. As discussed above I tried numerous methods but continued to come up against immutable tuples, a concept I was not familiar with before this project. 
+		Using string functions to paste positions and then check for duplicates in old vs new positions (using the any function) was also a method I tried to generate a list of blocked cars, but I ran into problems when mapping positions of blocked cars back to their old positions and preventing these cars from being moved.
+		Another issue that confused me in my initial attempts was the concept of modifying lists/arrays in place versus merely changing a view. 
+
+		\newpage
+
+		I've since found a few books on basic python with which I spent most of my time this week learning the basics of the language, and also pandas, scikit-learn, and numpy tutorials and books online which will assist my application of machine learning tasks in this language. 
+		I hope to complete my project for this course using image recognition tools (possibly neural nets??) that are present in these packages, assuming I can overcome the steep learning curve.
+
+	\section{Git}
+		I've been using git since the start of the year to manage projects for classes and research projects I'm involved in.
+		Using ssh keypairs and running git from the shell allows easy version control between multiple computers and was a great tool when collaborating on writing grants/papers etc, especially when using raw text such as latex documents.
+		My github repo can be found at: https://github.com/hughec1329
+
+\newpage
+	\section{CODE}
+	\subsection{R}
+		\lstinputlisting[breaklines=TRUE]{H04.R}
+	\subsection{shell}
+		\lstinputlisting[breaklines=TRUE]{plan.sh}
+		\lstinputlisting[breaklines=TRUE]{planes.sh}
+
+\end{document}

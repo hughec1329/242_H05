@@ -1,4 +1,5 @@
 #!/bin/bash
+# How to pass in airline names as argument to script?
 case "$1" in
 	count)
 		lax=`cat $2 | awk -F ',' '{if ($17 == "LAX" ) s+=$15} END {print s}'`

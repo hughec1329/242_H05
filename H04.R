@@ -7,12 +7,13 @@
 ###############################
 
 ports = c("LAX","OAK","SMF","SFO")
-pflat = paste(ports,"|",sep="", collapse = "") # lthrow together for grep.
+coll = paste(ports,"|",sep="", collapse = "") # lthrow together for grep.
+pflat = substr(coll,1,nchar(coll)-1)
 fill = "~/data/airports/open/1987.csv"
 com = sprintf("cat %s | awk -F ',' '{print $17}'| grep -E '%s' | sort | uniq -c",fill,pflat)
 ret = system(com,intern = TRUE)
 foo = sapply(ret,function(i) unlist(strsplit(i," ")))
-planes = structure(as.integer(lapply(nom,function(i) i[length(i)-1])) , names = lapply(nom,function(i) i[length(i)]))
+planes = structure(as.integer(lapply(foo,function(i) i[length(i)-1])) , names = lapply(foo,function(i) i[length(i)]))
 
 
 ### mean and SD of arrival delay times.
@@ -45,7 +46,7 @@ sds
 
 
 ##############################
-### within R - Cant do?
+### within R - Cant do? without messy slow loops?
 ##############################
 
 fill = "~/data/airports/open/1987.csv"
@@ -73,5 +74,30 @@ passes = round(nlin/block)
 ### with DB's
 ##############################
 
+#### SQLITE
 
+library(RSQLite)
+con = dbConnect(SQLite(),dbname="~/data/airports/delays.db")
+ports = c("'LAX'","'OAK'","'SMF'","'SFO'")
+
+## COUNTS
+com = sprintf("SELECT COUNT(arrd) FROM delays WHERE origin = %s",ports)
+lapply(com,function(i) fetch(dbSendQuery(con,i)))
+
+## AVG
+com = sprintf("SELECT AVG(arrd) FROM delays WHERE origin = %s",ports)
+ret = lapply(com,function(i) fetch(dbSendQuery(con,i)))
+avg = structure(as.numeric(unlist(ret)),names = ports) # 
+
+## SD
+com = sprintf("SELECT SUM((arrd-%s)*(arrd-%s))/COUNT(arrd) FROM delays WHERE origin = %s",avg,avg,ports)
+ret = lapply(com,function(i) fetch(dbSendQuery(con,i)))
+sd = structure(sqrt(as.numeric(unlist(ret))),names = ports) # 
+
+## check
+# cat 1987.csv | awk -F "," "{if ($17 == 'LAX') print $15}" > lax ..From shell
+lax = read.table("lax")
+sd(lax,na.rm=TRUE)	# 33 - agrees w shell but not sql
+# made test table to check calculation
+# N-1!!!
 
