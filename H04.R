@@ -46,7 +46,7 @@ sds
 
 
 ##############################
-### within R - Cant do? without messy slow loops?
+### within R - Cant do without messy slow loops?
 ##############################
 
 fill = "~/data/airports/open/1987.csv"
@@ -74,6 +74,22 @@ passes = round(nlin/block)
 ### with DB's
 ##############################
 
+
+library(ggplot2)
+library(reshape2)
+specs = data.frame(db = c("sqlite","mysql","monet"),
+		   loadtimes = c(0,124.37,0),
+		   avggroupby = c(10.694,6.4,0.136),
+		   createindex = c(14.401,19.41,0.369),
+		   avggroupbyWindex = c(6.178,37.12,0.153),	# slowed down all except sqlite?
+		   unconditionalstdev = c(2.076,5.17,0.255)
+		   )
+names(specs) = c("db","load time","group by pre index", "create index","group by post index","standard deviation")
+tim = melt(specs[,-2],id.vars="db")
+ggplot(tim, aes(variable,value,fill=db),xlab = "command", ylab = "time", main = "Comparison between Databases for running same commands") +geom_bar(position="dodge",main = "test")
+ggsave("bench.jpg")
+
+
 #### SQLITE
 
 library(RSQLite)
@@ -90,7 +106,7 @@ ret = lapply(com,function(i) fetch(dbSendQuery(con,i)))
 avg = structure(as.numeric(unlist(ret)),names = ports) # 
 
 ## SD
-com = sprintf("SELECT SUM((arrd-%s)*(arrd-%s))/COUNT(arrd) FROM delays WHERE origin = %s",avg,avg,ports)
+com = sprintf("SELECT SUM((arrd-%s)*(arrd-%s))/(COUNT(arrd)-1) FROM delays WHERE origin = %s",avg,avg,ports)
 ret = lapply(com,function(i) fetch(dbSendQuery(con,i)))
 sd = structure(sqrt(as.numeric(unlist(ret))),names = ports) # 
 
@@ -99,5 +115,62 @@ sd = structure(sqrt(as.numeric(unlist(ret))),names = ports) #
 lax = read.table("lax")
 sd(lax,na.rm=TRUE)	# 33 - agrees w shell but not sql
 # made test table to check calculation
-# N-1!!!
+# Close but no cigar??
 
+
+
+#### MySQL
+
+library(RSQLite)
+con = dbConnect(SQLite(),dbname="~/data/airports/delays.db")
+ports = c("'LAX'","'OAK'","'SMF'","'SFO'")
+
+## COUNTS
+com = sprintf("SELECT COUNT(arrd) FROM delays WHERE origin = %s",ports)
+lapply(com,function(i) fetch(dbSendQuery(con,i)))
+
+## AVG
+com = sprintf("SELECT AVG(arrd) FROM delays WHERE origin = %s",ports)
+ret = lapply(com,function(i) fetch(dbSendQuery(con,i)))
+avg = structure(as.numeric(unlist(ret)),names = ports) # 
+
+## SD
+com = sprintf("SELECT SUM((arrd-%s)*(arrd-%s))/(COUNT(arrd)-1) FROM delays WHERE origin = %s",avg,avg,ports)
+ret = lapply(com,function(i) fetch(dbSendQuery(con,i)))
+sd = structure(sqrt(as.numeric(unlist(ret))),names = ports) # 
+
+## check
+# cat 1987.csv | awk -F "," "{if ($17 == 'LAX') print $15}" > lax ..From shell
+lax = read.table("lax")
+sd(lax,na.rm=TRUE)	# 33 - agrees w shell but not sql
+# made test table to check calculation
+# Close but no cigar??
+
+
+
+#### Monetdb
+
+library(RSQLite)
+con = dbConnect(SQLite(),dbname="~/data/airports/delays.db")
+ports = c("'LAX'","'OAK'","'SMF'","'SFO'")
+
+## COUNTS
+com = sprintf("SELECT COUNT(arrd) FROM delays WHERE origin = %s",ports)
+lapply(com,function(i) fetch(dbSendQuery(con,i)))
+
+## AVG
+com = sprintf("SELECT AVG(arrd) FROM delays WHERE origin = %s",ports)
+ret = lapply(com,function(i) fetch(dbSendQuery(con,i)))
+avg = structure(as.numeric(unlist(ret)),names = ports) # 
+
+## SD
+com = sprintf("SELECT SUM((arrd-%s)*(arrd-%s))/(COUNT(arrd)-1) FROM delays WHERE origin = %s",avg,avg,ports)
+ret = lapply(com,function(i) fetch(dbSendQuery(con,i)))
+sd = structure(sqrt(as.numeric(unlist(ret))),names = ports) # 
+
+## check
+# cat 1987.csv | awk -F "," "{if ($17 == 'LAX') print $15}" > lax ..From shell
+lax = read.table("lax")
+sd(lax,na.rm=TRUE)	# 33 - agrees w shell but not sql
+# made test table to check calculation
+# Close but no cigar??

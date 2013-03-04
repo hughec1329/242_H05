@@ -20,31 +20,42 @@
 
 	\section{Using R}
 		\subsection{Using file connections}
-			
+				
 
 		\subsection{Using Databases}
 
-	\section{Moving cars.}
-		Moving cars was achieved by selecting all color based on time, then incrementing their x or y positions respectively. Any cars exceeding the dimensions of map in either dimension was placed back at beginning. 
+	\section{Using MySQL on Amazon EC2 instance.}
+		I'd been playing around with an EC2
+		after setting up user on mysql 5.5 serer, I was able to establish a connection using dbconnect() 
+		After trying various ways to insert delays data into mysql (LOAD LOCAL INFILE, LOAD INFILE, BULK IMPORT etc.) I found it 
+		had to use --local-infile option to allow local adding - come funky permisisons error.
+		Used scp to transfer R script files, and wget to pull data.
+		Using the EC2 instance through ssh was good practice using a tmux session and forced me to use command line (vim, mysql, top etc) tools for everything. It was also usefuil to use tmux so if ssh pipe was broken, I could recover the session without any loss of data. 
 
+		creating index on origin sped up avg calc from 0.74sec to 0.12 sec, a 600\% increase
+		MySQL also has a handy inbuilt function for Standard deviation, STD, which made this calculation easier although it did not affect the time taken.
+		I tried to use entire dataset to compare speeds amoung db's but hit the space limit on my free usage ec2.
+		Even just the 2008.csv blew up the MySQL I'd installed locally so found out I can get a free micro amazon DB, and loaded data from local machine to 
 
-		I didn't include dimensions with map object as in H02, but perhaps this could be achieved using a similar list function, and remove the need to include map dimensions in call to move function.
-		The move function worked well for smaller maps where I could visually check the results, however because I couldn't get it to function within a loop I was unable to assess it on larger maps.
+		kept getting process's killed, which after some googling looked like it was a memory issue on amazon, which auto kills hungry process.
+	\section{MonetDB locally}
+		I was intersted in the speed gains given my monetdb.
+		The moetdb client didn't like the Year or Month variable, and threw an error relating to primary keys so I'd assume its a reserved word.
+		To get the data into monetdb the header row had to be deleted, and all NA's deleted as they didnt match data types. I used tr to translate NA's to 0's, which satisfied both int and varchar recquirements. 
+		It was much faster to import data into a local monetdb than cloud mysql, but this was obviously due to the data upload.
+	\section{Speed}
+		I set up monetDB and MySQL on my machine to test the speed of each.
+		A plot of the time taken by each db for the same function is below.
+		As can be seen from this plot, monetDb outperformed all other dbs over all tests.
+		One strange thing in my speed benchmarking was the effect of indexing. Using SQlite indexing on origin sped up computations by 230 percent, and monet sped up ~240 percent, however using MySQL it nearly doubled the time taken.
 
-	\section{Checking Jams.}
-		Using Python I struggled with the referencing of car locations that would allow me to check jams. As discussed above I tried numerous methods but continued to come up against immutable tuples, a concept I was not familiar with before this project. 
-		Using string functions to paste positions and then check for duplicates in old vs new positions (using the any function) was also a method I tried to generate a list of blocked cars, but I ran into problems when mapping positions of blocked cars back to their old positions and preventing these cars from being moved.
-		Another issue that confused me in my initial attempts was the concept of modifying lists/arrays in place versus merely changing a view. 
-
-		\newpage
-
-		I've since found a few books on basic python with which I spent most of my time this week learning the basics of the language, and also pandas, scikit-learn, and numpy tutorials and books online which will assist my application of machine learning tasks in this language. 
-		I hope to complete my project for this course using image recognition tools (possibly neural nets??) that are present in these packages, assuming I can overcome the steep learning curve.
-
+		\begin{figure}[h!]
+			\centering
+			\includegraphics[scale=0.7]{bench.jpg}
+			\caption{Comparison of time taken for various databases on same tasks}
+		\end{figure}
 	\section{Git}
-		I've been using git since the start of the year to manage projects for classes and research projects I'm involved in.
-		Using ssh keypairs and running git from the shell allows easy version control between multiple computers and was a great tool when collaborating on writing grants/papers etc, especially when using raw text such as latex documents.
-		My github repo can be found at: https://github.com/hughec1329
+		My github repo can be found at: https://github.com/hughec1329/
 
 \newpage
 	\section{CODE}
@@ -53,5 +64,6 @@
 	\subsection{shell}
 		\lstinputlisting[breaklines=TRUE]{plan.sh}
 		\lstinputlisting[breaklines=TRUE]{planes.sh}
+	\subsection{Amazon RDS and EC2}
 
 \end{document}
